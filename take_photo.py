@@ -19,13 +19,17 @@ GPIO.setup( _PIN_OUT, GPIO.OUT )
 camera = picamera.PiCamera()
 camera.start_preview()
 
-while GPIO.input( _PIN_IN ):
-    pass
+while True:
+    while GPIO.input( _PIN_IN ):
+        pass
 
-GPIO.output( _PIN_OUT, True )
-camera.capture( 'camera.jpg' )
-print "writing output to 'camera.jpg'"
-time.sleep(0.5)
-GPIO.output( _PIN_OUT, False )
+    print "Button pressed!  Activating LED..."
+    GPIO.output( _PIN_OUT, True )
+    time.sleep(0.5)
+    print "Taking photo and Writing output to 'camera.jpg'..."
+    camera.capture( 'camera.jpg' )
+    time.sleep(0.5)
+    print "Deactivating LED and waiting for another button press."
+    GPIO.output( _PIN_OUT, False )
 
 GPIO.cleanup()
