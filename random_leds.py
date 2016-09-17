@@ -16,13 +16,25 @@ def print_state( led_pins, pin_states ):
         output += "%2d=%1d " % ( j, pin_states[i] )
     print output
 
-def generate_pin_states( led_pins, mode=2 ):
+def generate_pin_states( led_pins, pin_states, mode=2 ):
+    state_map = [ GPIO.LOW, GPIO.HIGH ]
     if mode == 0:
         pin_states = [ GPIO.LOW for x in led_pins ]
     elif mode == 1:
         pin_states = [ GPIO.HIGH for x in led_pins ]
     elif mode == 2:
         pin_states = [ state_map[random.randint(0,1)] for x in led_pins ]
+    elif mode == 3:
+        if pin_states[0] == GPIO.HIGH:
+            state_order = [ GPIO.HIGH, GPIO.LOW ]
+        else:
+            state_order = [ GPIO.LOW, GPIO.HIGH ]
+        ### try to turn everything on
+        for state in state_order:
+            for i in range(len(pin_states)):
+                if pin_states[i] != state:
+                    pin_states[i] = state
+                    return pin_states
     elif mode == 99:
         pin_states = []
         for i in led_pins:
@@ -36,7 +48,8 @@ def generate_pin_states( led_pins, mode=2 ):
     return pin_states
 
 if __name__ == "__main__":
-    led_pins = [ 6, 19, 13, 26, 12, 16, 20, 21 ]
+    led_pins = [ 6, 19, 26, 13, 20, 21, 12 ]
+    pin_states = [ GPIO.HIGH for x in led_pins ]
 
     if len(sys.argv) > 1:
         led_mode = int(sys.argv[1])
@@ -46,14 +59,12 @@ if __name__ == "__main__":
     GPIO.setmode( GPIO.BCM )
     GPIO.setup( led_pins, GPIO.OUT, initial=GPIO.LOW )
 
-    state_map = [ GPIO.LOW, GPIO.HIGH ]
-
     try:
         while True:
-            pin_states = generate_pin_states( led_pins, mode=led_mode )
+            pin_states = generate_pin_states( led_pins, pin_states, mode=led_mode )
 #           print_state( led_pins, pin_states )
             GPIO.output( led_pins, pin_states )
-            time.sleep(0.75)
+            time.sleep(0.25)
 
     except KeyboardInterrupt:
         print "Cleaning up!"
