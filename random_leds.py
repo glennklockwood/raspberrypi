@@ -35,6 +35,30 @@ def generate_pin_states( led_pins, pin_states, mode=2 ):
                 if pin_states[i] != state:
                     pin_states[i] = state
                     return pin_states
+    elif mode == 4:
+        _STEP = 3
+        ### first check to ensure we have the desired number of pins lit up; if
+        ### not, initialize all pins
+        num_on = 0
+        num_ideal = len(pin_states) - _STEP
+        for i in pin_states:
+            if i == GPIO.HIGH:
+                num_on += 1
+        if num_on != num_ideal:
+            print "Initializing all pins--%d on, but %d ideal" % (num_on, num_ideal)
+            pin_states[0:num_ideal] = [ GPIO.HIGH for x in range(num_ideal) ]
+            pin_states[num_ideal:] = [ GPIO.LOW for x in range(len(pin_states)-num_ideal) ]
+
+        # find the first pin that's on and turn it off; then step and turn on
+        i = 0
+        last_state = None
+        while not (pin_states[i] == GPIO.HIGH and last_state == GPIO.LOW):
+            last_state = pin_states[i]
+            i = (i + 1) % len(pin_states)
+        pin_states[i] = GPIO.LOW
+        pin_states[(i+_STEP+1) % len(pin_states)] = GPIO.HIGH
+        return pin_states
+
     elif mode == 99:
         pin_states = []
         for i in led_pins:
