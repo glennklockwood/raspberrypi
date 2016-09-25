@@ -16,21 +16,15 @@ _VERBOSE_T0 = time.time()
 
 ### Map pins on CD4017BE to RPi GPIO BCM pins
 PINS = {
-    "output5": { 
-        "ic_pin": 1,
-        "gpio_pin": 17,
+    "output0": {
+        "ic_pin": 3,
+        "gpio_pin": 22,
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
     "output1": {
         "ic_pin" : 2,
-        "gpio_pin": 27,
-        "io": GPIO.OUT,
-        "pud": GPIO.PUD_DOWN,
-    },
-    "output0": {
-        "ic_pin": 3,
-        "gpio_pin": 22,
+        "gpio_pin": 17,
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
@@ -40,45 +34,45 @@ PINS = {
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
-    "output6": {
-        "ic_pin": 5,
-        "gpio_pin": 6,
-        "io": GPIO.OUT,
-        "pud": GPIO.PUD_DOWN,
-    },
-    "output7": {
-        "ic_pin": 6,
-        "gpio_pin": 13,
-        "io": GPIO.OUT,
-        "pud": GPIO.PUD_DOWN,
-    },
     "output3": {
         "ic_pin": 7,
-        "gpio_pin": 23,
-        "io": GPIO.OUT,
-        "pud": GPIO.PUD_DOWN,
-    },
-    "vss": {
-        "ic_pin": 8,
-        "gpio_pin": None,
-        "io": None,
-        "pud": None,
-    },
-    "output8": {
-        "ic_pin": 9,
-        "gpio_pin": 24,
+        "gpio_pin": 6,
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
     "output4": {
         "ic_pin": 10,
+        "gpio_pin": 13,
+        "io": GPIO.OUT,
+        "pud": GPIO.PUD_DOWN,
+    },
+    "output5": { 
+        "ic_pin": 1,
+        "gpio_pin": 12,
+        "io": GPIO.OUT,
+        "pud": GPIO.PUD_DOWN,
+    },
+    "output6": {
+        "ic_pin": 5,
         "gpio_pin": 25,
+        "io": GPIO.OUT,
+        "pud": GPIO.PUD_DOWN,
+    },
+    "output7": {
+        "ic_pin": 6,
+        "gpio_pin": 24,
+        "io": GPIO.OUT,
+        "pud": GPIO.PUD_DOWN,
+    },
+    "output8": {
+        "ic_pin": 9,
+        "gpio_pin": 27,
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
     "output9": {
         "ic_pin": 11,
-        "gpio_pin": 12,
+        "gpio_pin": 23,
         "io": GPIO.OUT,
         "pud": GPIO.PUD_DOWN,
     },
@@ -108,6 +102,12 @@ PINS = {
     },
     "vdd": {
         "ic_pin": 16,
+        "gpio_pin": None,
+        "io": None,
+        "pud": None,
+    },
+    "vss": {
+        "ic_pin": 8,
         "gpio_pin": None,
         "io": None,
         "pud": None,
@@ -170,7 +170,7 @@ def activate_ic( num_outputs ):
             GPIO.output( pin_carry_out, GPIO.HIGH )
             GPIO.output( pin_carry_out, GPIO.LOW)
 
-        vprint("detected CLK" )
+        vprint("detected CLK; illuminated GPIO pin %d" % PINS[pin_key]['gpio_pin'] )
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == "-v":
