@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+#
+#  mcp3008spi.py - demonstrate how to interface with an MCP3008 analog/digital
+#    converter using a serial peripheral interface implemented in Python.
+#
+#  Glenn K. Lockwood, October 2016
+#
 """
 Functions to communicate with the MCP3008 ADC using software-implemented SPI.
 The SPI functions are general enough to be useful for other chips as well.
@@ -7,20 +13,24 @@ The SPI functions are general enough to be useful for other chips as well.
 import sys
 from RPi import GPIO
 
-_DEBUG = True
-
+DEBUG = False
+_CONFIGURED = False
 _SPI_CLK  = 18
 _SPI_MISO = 23
 _SPI_MOSI = 24
 _SPI_CS   = 25
 
-def _vprint(msg):
-    """print messages only when debugging is enabled"""
-    if _DEBUG:
-        sys.stderr.write(msg + "\n")
-
 def spi_init(pin_clk=_SPI_CLK, pin_cs=_SPI_CS):
     """ensure that the slave select is low and clock is reset"""
+    global _CONFIGURED
+    if not _CONFIGURED:
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(_SPI_MOSI, GPIO.OUT)
+        GPIO.setup(_SPI_MISO, GPIO.IN)
+        GPIO.setup(_SPI_CLK, GPIO.OUT)
+        GPIO.setup(_SPI_CS, GPIO.OUT)
+        _CONFIGURED = True
+
     GPIO.output(pin_cs, GPIO.HIGH)
     GPIO.output(pin_cs, GPIO.LOW)
     GPIO.output(pin_clk, GPIO.LOW)
@@ -58,18 +68,6 @@ def spi_get(bits, pin_clk=_SPI_CLK, pin_miso=_SPI_MISO):
 
     return data_buf
 
-def print_bin(data, bits):
-    """convert a bit vector to a string"""
-    msg = ""
-    data_buf = data
-    for _ in range(bits):
-        if data_buf & (2**(bits-1)):
-            msg += "1"
-        else:
-            msg += "0"
-        data_buf <<= 1
-    return msg
-
 def mcp3008_get(channel):
     """Get a single 10-bit measurement from a single channel of MCP3008
     The MCP3008 protocol is described as:
@@ -100,34 +98,48 @@ def mcp3008_get(channel):
     ### 0x18 = 11000 = start bit (1), single-ended mode (1), and channel 0 (000)
     cmd = 0x18 | channel
     spi_put(cmd, 5)
-    print "Sent config header [%s]" % print_bin(cmd, 5)
+    _vprint("Sent config header [%s]" % _print_bin(cmd, 5))
 
     ### get 1 NULL bit + 10 data bits in MSR order
     bits = 11
     data_buf = spi_get(bits)
-    print "Received [%4d] [%s]" % (data_buf, print_bin(data_buf, bits))
+    _vprint("Received [%4d] [%s]" % (data_buf, _print_bin(data_buf, bits)))
 
     ### mask off the most significant bit (NULL bit) just in case it's nonzero
-    bits &= ~(2**(bits-1))
-    print "Decoded  [%4d] [%s]" % (data_buf, print_bin(data_buf, bits))
+    data_buf &= ~(2**(bits-1))
+    _vprint("Decoded  [%4d] [%s]" % (data_buf, _print_bin(data_buf, bits)))
 
     spi_finalize()
 
-def main( args ):
+    return data_buf
+
+def _vprint(msg):
+    """print messages only when debugging is enabled"""
+    if DEBUG:
+        sys.stderr.write(msg + "\n")
+
+def _print_bin(data, bits):
+    """convert a bit vector to a string"""
+    msg = ""
+    data_buf = data
+    for _ in range(bits):
+        if data_buf & (2**(bits-1)):
+            msg += "1"
+        else:
+            msg += "0"
+        data_buf <<= 1
+    return msg
+
+def test( args ):
+    """demonstrate basic functionality by retrieving a single measurement"""
     if len(args) == 0:
         use_channel = 0
     else:
         use_channel = int(args[0])
 
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setup(_SPI_MOSI, GPIO.OUT)
-    GPIO.setup(_SPI_MISO, GPIO.IN)
-    GPIO.setup(_SPI_CLK, GPIO.OUT)
-    GPIO.setup(_SPI_CS, GPIO.OUT)
-
     try:
         print "Using channel %d" % use_channel
-        mcp3008_get(use_channel)
+        print "Got reading [%d]" % mcp3008_get(use_channel)
     except:
         GPIO.cleanup()
         raise
@@ -135,4 +147,4 @@ def main( args ):
     GPIO.cleanup()
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    test(sys.argv[1:])
