@@ -43,28 +43,37 @@ def spi_finalize(pin_clk=_SPI_CLK, pin_cs=_SPI_CS):
 def spi_put(data, bits, pin_clk=_SPI_CLK, pin_mosi=_SPI_MOSI):
     """send a bit vector of a given length over MOSI"""
     data_buf = data
+    packet = ""
     for _ in range(bits):
         if data_buf & (2**(bits-1)):
             GPIO.output(pin_mosi, GPIO.HIGH)
+            packet += "1"
         else:
             GPIO.output(pin_mosi, GPIO.LOW)
-        _vprint("  {:-12b}".format(2**(bits-1)))
-        _vprint("& {:-12b} = {:12b}".format(data_buf, data_buf & (2**(bits-1))))
+            packet += "0"
+#       _vprint("  {:-12b}".format(2**(bits-1)))
+#       _vprint("& {:-12b} = {:12b}".format(data_buf, data_buf & (2**(bits-1))))
         data_buf <<= 1
         GPIO.output(pin_clk, GPIO.HIGH)
         GPIO.output(pin_clk, GPIO.LOW)
+    _vprint("Sent [%s]" % packet)
     return
 
 def spi_get(bits, pin_clk=_SPI_CLK, pin_miso=_SPI_MISO):
     """get a bit vector of a given length via MISO"""
     data_buf = 0x0
 
+    packet = ""
     for _ in range(bits):
         GPIO.output(pin_clk, GPIO.HIGH)
         GPIO.output(pin_clk, GPIO.LOW)
         data_buf <<= 1
         if GPIO.input(pin_miso):
             data_buf |= 0x1
+            packet += "1"
+        else:
+            packet += "0"
+    _vprint("Recv [%s]" % packet)
 
     return data_buf
 
