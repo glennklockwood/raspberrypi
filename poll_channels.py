@@ -15,8 +15,9 @@ import time
 import mcp3008spi
 import poll_thermistor
 from RPi import GPIO
+import gsheets
 
-SECONDS_PER_SAMPLE = 5.0
+SECONDS_PER_SAMPLE = 60.0
 
 ### Number of channels on ADC chip
 NUM_CHANNELS = 8
@@ -27,6 +28,10 @@ CHANNEL_PHOTO = 1
 
 ### Resistance of resistor attached to each channel in series
 SERIES_RESISTOR_OHMS = [ 10000.0 ] * NUM_CHANNELS
+
+### Google Sheets Spreadsheet ID
+SPREADSHEET_ID = "188_M8F_5TWVuvWKsviKfyvFv2qjLqETryw3zu9CjjZ4"
+SPREADSHEET_NAME = "Sensors"
 
 def poll_channels():
     """
@@ -62,18 +67,28 @@ def poll_channels():
                     resistance[i] = SERIES_RESISTOR_OHMS[i] / (1023.0 / x - 1.0)
             temperature = poll_thermistor.get_temperature(resistance[CHANNEL_THERM], temperatures)
 
-            print "%-19s %6d %6d %6.2f %9.1f %6d %6d %6.2f" % (
-                time.strftime("%Y-%m-%d %H:%M:%S"),
+            values = [ time.strftime("%Y-%m-%d %H:%M:%S"),
                 int(avg_reading[CHANNEL_THERM]),
                 int(resistance[CHANNEL_THERM]),
                 voltage[CHANNEL_THERM],
                 temperature,
                 int(avg_reading[CHANNEL_PHOTO]),
                 int(resistance[CHANNEL_PHOTO]),
-                voltage[CHANNEL_PHOTO])
+                voltage[CHANNEL_PHOTO] ]
+            print "%-19s %6d %6d %6.2f %9.1f %6d %6d %6.2f" % tuple(values)
             elapsed_secs = 0.0
             avg_reading = [ 0.0 ] * NUM_CHANNELS
             count = 0
+
+            ### Google Sheets integration
+            if SPREADSHEET_ID:
+                try:
+                    gsheets.upload_values(values,
+                                          spreadsheet_id=SPREADSHEET_ID,
+                                          sheet_name=SPREADSHEET_NAME)
+                except:
+                    ### Don't crash if something goes wrong with Google
+                    pass
 
         time.sleep(1.0)
 
