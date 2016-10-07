@@ -12,10 +12,10 @@ Poll channels of an MCP3008 ADC and print the readings to stdout.
 import os
 import sys
 import time
+import subprocess
 import mcp3008spi
 import poll_thermistor
 from RPi import GPIO
-import gsheets
 
 SECONDS_PER_SAMPLE = 60.0
 
@@ -28,10 +28,6 @@ CHANNEL_PHOTO = 1
 
 ### Resistance of resistor attached to each channel in series
 SERIES_RESISTOR_OHMS = [ 10000.0 ] * NUM_CHANNELS
-
-### Google Sheets Spreadsheet ID
-SPREADSHEET_ID = "188_M8F_5TWVuvWKsviKfyvFv2qjLqETryw3zu9CjjZ4"
-SPREADSHEET_NAME = "Sensors"
 
 def poll_channels():
     """
@@ -50,6 +46,7 @@ def poll_channels():
     print "%-19s %6s %6s %6s %9s %6s %6s %6s" % ("Date",
                                "ThRaw", "ThOhms", "ThVolt", "Temp(C)",
                                "PhRaw", "PhOhms", "PhVolt")
+
     while True:
         avg_reading[CHANNEL_THERM] += mcp3008spi.mcp3008_get(CHANNEL_THERM)
         avg_reading[CHANNEL_PHOTO] += mcp3008spi.mcp3008_get(CHANNEL_PHOTO)
@@ -81,14 +78,7 @@ def poll_channels():
             count = 0
 
             ### Google Sheets integration
-            if SPREADSHEET_ID:
-                try:
-                    gsheets.upload_values(values,
-                                          spreadsheet_id=SPREADSHEET_ID,
-                                          sheet_name=SPREADSHEET_NAME)
-                except:
-                    ### Don't crash if something goes wrong with Google
-                    pass
+            subprocess.call( [ './gsheets.py' ] + [ str(x) for x in values ] )
 
         time.sleep(1.0)
 
