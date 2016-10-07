@@ -78,7 +78,7 @@ def poll_channels():
             count = 0
 
             ### Google Sheets integration
-            subprocess.call( [ './gsheets.py' ] + [ str(x) for x in values ] )
+            subprocess.call( [ './upload_sensordata.py' ] + [ str(x) for x in values ] )
 
         time.sleep(1.0)
 
