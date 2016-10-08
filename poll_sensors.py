@@ -17,7 +17,7 @@ import mcp3008spi
 import poll_thermistor
 from RPi import GPIO
 
-SECONDS_PER_SAMPLE = 60.0
+SECONDS_PER_SAMPLE = 5.0 * 60.0
 
 ### Number of channels on ADC chip
 NUM_CHANNELS = 8
@@ -28,6 +28,7 @@ CHANNEL_PHOTO = 1
 
 ### Resistance of resistor attached to each channel in series
 SERIES_RESISTOR_OHMS = [ 10000.0 ] * NUM_CHANNELS
+SERIES_RESISTOR_OHMS[CHANNEL_PHOTO] = 1000.0
 
 def poll_channels():
     """
