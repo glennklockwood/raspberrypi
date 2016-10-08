@@ -56,11 +56,11 @@ class SensorDataSpreadsheet(object):
     
         https://developers.google.com/sheets/guides/values#appending_values
         """
-        self.spreadsheets().values().append(
+        self.service.spreadsheets().values().append(
             spreadsheetId=self.spreadsheet_id,
-            range='%s!A1' % self.target_sheet_title,
+            range='%s!A1' % target_sheet_title,
             valueInputOption='USER_ENTERED',
-            body={ 'values': [ values ] }).execute()
+            body={ 'values': values }).execute()
 
     def reset_chart_ranges( self, target_chart_title ):
         """
@@ -174,7 +174,8 @@ if __name__ == '__main__':
 
     ### Upload new values to the absolute bottom of a spreadsheet
     if len(sys.argv[1:]) > 0:
-        sensor_spreadsheet.add_values_at_end(SPREADSHEET_NAME, [ sys.argv[1:] ])
+#       sensor_spreadsheet.add_values_at_end(SPREADSHEET_NAME, [ sys.argv[1:] ])
+        sensor_spreadsheet.append_values(SPREADSHEET_NAME, [ sys.argv[1:] ])
 
     ### Reset the bounds on the plot's x and y ranges to include the new data
     sensor_spreadsheet.reset_chart_ranges(CHART_NAME)
