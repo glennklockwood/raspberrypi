@@ -69,11 +69,7 @@ def main():
 
     ### Enable test mode
     max7219.put(int("111100000001",2), 16)
-
-    try:
-        input("Everything should be on now.  Press any key to continue.")
-    except:
-        pass
+    time.sleep(1.0)
 
     ### Disable test mode
     max7219.put(int("111100000000",2), 16)
@@ -87,7 +83,7 @@ def main():
 
     ### Enable everything
     apply_cols(max7219, 2**8-1)
-    time.sleep(5.0)
+    time.sleep(1.0)
 
     ### Enable each row one by one
     apply_rows(max7219, int("10010101",2), delay=0.1)
@@ -108,21 +104,19 @@ def main():
 
     try:
         while True:
-            apply_matrix(max7219, smiley, delay=0.0)
+            apply_matrix(max7219, smiley, delay=0.1)
             time.sleep(1.0)
             smiley = abs(smiley -1)
     except KeyboardInterrupt:
         pass
 
+    try:
+        input("Press any key to shut down.")
+    except:
+        pass
+
     ### Enable shutdown mode
-    max7219.put(int("110000000000",2))
+    max7219.put(int("110000000000",2), 16)
 
 if __name__ == '__main__':
-    try:
-        main()
-    except:
-        print "Cleaning up..."
-        GPIO.cleanup()
-        raise
-
-    GPIO.cleanup()
+    main()
