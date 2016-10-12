@@ -20,15 +20,17 @@ _SPI_MISO = 23
 _SPI_MOSI = 24
 _SPI_CS   = 25
 
-def spi_init(pin_clk=_SPI_CLK, pin_cs=_SPI_CS):
+def spi_init(pin_clk=_SPI_CLK, pin_cs=_SPI_CS, pin_mosi=_SPI_MOSI, pin_miso=_SPI_MISO):
     """ensure that the slave select is low and clock is reset"""
     global _CONFIGURED
     if not _CONFIGURED:
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(_SPI_MOSI, GPIO.OUT)
-        GPIO.setup(_SPI_MISO, GPIO.IN)
-        GPIO.setup(_SPI_CLK, GPIO.OUT)
-        GPIO.setup(_SPI_CS, GPIO.OUT)
+        if pin_mosi:
+            GPIO.setup(pin_mosi, GPIO.OUT)
+        if pin_miso:
+            GPIO.setup(pin_miso, GPIO.IN)
+        GPIO.setup(pin_clk, GPIO.OUT)
+        GPIO.setup(pin_cs, GPIO.OUT)
         _CONFIGURED = True
 
     GPIO.output(pin_cs, GPIO.HIGH)
