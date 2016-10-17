@@ -15,6 +15,7 @@ from RPi import GPIO
 class SPI(object):
     def __init__(self, clk, cs, mosi, miso, verbose=False):
         """Create a simple SPI pin map and configure an initial known state"""
+        self.configured = False
         self.clk = clk
         self.cs = cs
         self.mosi = mosi
@@ -31,15 +32,30 @@ class SPI(object):
             GPIO.setup(self.miso, GPIO.IN)
         GPIO.setup(self.clk, GPIO.OUT, initial=GPIO.LOW)
         GPIO.setup(self.cs, GPIO.OUT, initial=GPIO.HIGH)
+        self.configured = True
 
     def __del__(self):
         GPIO.cleanup()
+    
+    def clk_tick(self):
+        self._vprint("Setting CLK high, then low")
+        GPIO.output(self.clk, GPIO.HIGH)
+        GPIO.output(self.clk, GPIO.LOW)
 
-    def put(self, data, bits):
-        """send a bit vector of a given length over MOSI"""
+    def cs_low(self):
+        self._vprint("Pulling CS low")
+        GPIO.output(self.cs, GPIO.LOW)
+
+    def cs_high(self):
+        self._vprint("Pulling CS high")
+        GPIO.output(self.cs, GPIO.HIGH)
+
+    def put(self, data, bits, control_cs=True):
+        """Send a bit vector of a given length over MOSI"""
         data_buf = data
         packet = ""
-        GPIO.output(self.cs, GPIO.LOW)
+        if control_cs:
+            self.cs_low()
         try:
             for _ in range(bits):
                 if data_buf & (2**(bits-1)):
@@ -49,25 +65,26 @@ class SPI(object):
                     GPIO.output(self.mosi, GPIO.LOW)
                     packet += "0"
                 data_buf <<= 1
-                GPIO.output(self.clk, GPIO.HIGH)
-                GPIO.output(self.clk, GPIO.LOW)
+                self.clk_tick()
             self._vprint("Sent [%s]" % packet)
         except:
-            GPIO.output(self.cs, GPIO.HIGH)
+            if control_cs:
+                self.cs_high()
             raise
 
-        GPIO.output(self.cs, GPIO.HIGH)
+        if control_cs:
+            self.cs_high()
 
-    def get(bits):
-        """get a bit vector of a given length via MISO"""
+    def get(self, bits, control_cs=True):
+        """Get a bit vector of a given length via MISO"""
         data_buf = 0x0
 
         packet = ""
-        GPIO.output(self.cs, GPIO.LOW)
+        if control_cs:
+            self.cs_low()
         try:
             for _ in range(bits):
-                GPIO.output(self.clk, GPIO.HIGH)
-                GPIO.output(self.clk, GPIO.LOW)
+                self.clk_tick()
                 data_buf <<= 1
                 if GPIO.input(self.miso):
                     data_buf |= 0x1
@@ -76,11 +93,46 @@ class SPI(object):
                     packet += "0"
             self._vprint("Recv [%s]" % packet)
         except:
-            GPIO.output(self.cs, GPIO.HIGH)
+            if control_cs:
+                self.cs_high()
             raise
 
-        GPIO.output(self.cs, GPIO.HIGH)
+        if control_cs:
+            self.cs_high()
         return data_buf
+
+    def put_get(self, data, bits):
+        """Put and get bit vectors concurrently"""
+        put_data = data 
+        get_data = 0x0
+        put_packet = ""
+        get_packet = ""
+        self.cs_low()
+        try:
+            for i in range(bits):
+                if put_data & (2**(bits-1)):
+                    GPIO.output(self.mosi, GPIO.HIGH)
+                    put_packet += "1"
+                else:
+                    GPIO.output(self.mosi, GPIO.LOW)
+                    put_packet += "0"
+                put_data <<= 1
+                self.clk_tick()
+                get_data <<= 1
+                if GPIO.input(self.miso) == GPIO.HIGH:
+                    get_data |= 0x1
+                    get_packet += "1"
+                else:
+                    get_packet += "0"
+            self._vprint("Sent [%s]" % put_packet)
+            self._vprint("Recv [%s]" % get_packet)
+        except:
+            self.cs_high()
+            raise
+
+        self.cs_high()
+        return get_data
+
 
     def _vprint(self, msg):
         """print messages only when debugging is enabled"""
