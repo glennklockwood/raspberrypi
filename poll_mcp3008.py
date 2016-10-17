@@ -3,7 +3,7 @@
 Demonstrate how to use the MCP3008 class
 """
 
-import mcp3008
+import spi.mcp3008 as mcp3008
 import time
 
 dev = mcp3008.MCP3008(clk=18, cs=25, mosi=24, miso=23, verbose=False)
