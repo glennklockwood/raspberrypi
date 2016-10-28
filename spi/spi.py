@@ -12,10 +12,12 @@ the SPI endpoint's protocol.
 import sys
 from RPi import GPIO
 
+_CONFIGURATIONS = 0
+
 class SPI(object):
     def __init__(self, clk, cs, mosi, miso, verbose=False):
         """Create a simple SPI pin map and configure an initial known state"""
-        self.configured = False
+        global _CONFIGURATIONS
         self.clk = clk
         self.cs = cs
         self.mosi = mosi
@@ -32,10 +34,17 @@ class SPI(object):
             GPIO.setup(self.miso, GPIO.IN)
         GPIO.setup(self.clk, GPIO.OUT, initial=GPIO.LOW)
         GPIO.setup(self.cs, GPIO.OUT, initial=GPIO.HIGH)
-        self.configured = True
+        _CONFIGURATIONS += 1
 
     def __del__(self):
-        GPIO.cleanup()
+        """
+        Track how many instances of this object are still referenced; when the
+        last one is destroyed, shut down the GPIO subsystem.
+        """
+        global _CONFIGURATIONS
+        _CONFIGURATIONS -= 1
+        if _CONFIGURATIONS == 0:
+            GPIO.cleanup()
     
     def clk_tick(self):
 #       self._vprint("Setting CLK high, then low")
