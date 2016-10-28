@@ -38,16 +38,16 @@ class SPI(object):
         GPIO.cleanup()
     
     def clk_tick(self):
-        self._vprint("Setting CLK high, then low")
+#       self._vprint("Setting CLK high, then low")
         GPIO.output(self.clk, GPIO.HIGH)
         GPIO.output(self.clk, GPIO.LOW)
 
     def cs_low(self):
-        self._vprint("Pulling CS low")
+#       self._vprint("Pulling CS low")
         GPIO.output(self.cs, GPIO.LOW)
 
     def cs_high(self):
-        self._vprint("Pulling CS high")
+#       self._vprint("Pulling CS high")
         GPIO.output(self.cs, GPIO.HIGH)
 
     def put(self, data, bits, control_cs=True):
