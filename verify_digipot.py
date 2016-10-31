@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 Use both the MCP3008 analog-digital converter along with the MCP41010 digital
-potentiometer to set a resistance, then masure it.
+potentiometer to set a resistance, then measure it.
 """
 
 import spi.mcp3008 as mcp3008
