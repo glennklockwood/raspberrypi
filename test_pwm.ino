@@ -4,13 +4,13 @@
    Glenn K. Lockwood
 */
 #define VERBOSE 0
-int pin[3]; /* pins for red, green, and blue */
-int brightness[3]; /* state of each pin's PWM */
-int bright_max = 255;
-int fade_amount = 5;
+uint8_t pin[3]; /* pins for red, green, and blue */
+uint8_t brightness[3]; /* state of each pin's PWM */
+uint8_t bright_max = 255;
+uint8_t fade_amount = 5;
 
 void setup() {
-  for ( int i = 0; i < 3; i++ ) {
+  for ( uint8_t i = 0; i < 3; i++ ) {
     pinMode(i, OUTPUT);
   }
 
@@ -27,12 +27,12 @@ void setup() {
 }
 
 void loop() {
-  int iters = bright_max / fade_amount + 1;
-  int incr = fade_amount;
-  long r = random(3);
+  uint8_t iters = bright_max / fade_amount + 1;
+  uint8_t incr = fade_amount;
+  uint8_t r = random(3);
 
   /* cycle the LED from 0 to bright_max or vice versa */
-  for (int i = 0; i < iters; i++) {
+  for (uint8_t i = 0; i < iters; i++) {
 
     analogWrite(pin[r], brightness[r]);
 
