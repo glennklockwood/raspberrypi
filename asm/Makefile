@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-BINARIES = hello
+BINARIES = arithmetic
 
 all: $(BINARIES)
 
