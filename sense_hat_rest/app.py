@@ -17,8 +17,27 @@ class Sense(Resource):
     def get(self):
         return {}
 
-    def post(self):
-        return {}, 201
+class Humidity(Resource):
+    def get(self):
+        return {
+            "value": sense.get_humidity(),
+            "units": "percent"
+        }
+
+class Temperature(Resource):
+    def get(self):
+        return {
+            "value": sense.get_temperature_from_humidity(),
+            "units": "celsius",
+            "from": "humidity"
+        }
+
+class Pressure(Resource):
+    def get(self):
+        return {
+            "value": sense.get_pressure(),
+            "units": "millibar"
+        }
 
 class Pixel(Resource):
     def __init__(self, *args, **kwargs):
@@ -27,10 +46,10 @@ class Pixel(Resource):
         self.get_parser.add_argument('x', type=int, help="X coordinate of LED (0-7)")
         self.get_parser.add_argument('y', type=int, help="Y coordinate of LED (0-7)")
 
-        self.post_parser = self.get_parser.copy()
-        self.post_parser.add_argument('r', type=int, help="red component of desired color (0-255)", required=True)
-        self.post_parser.add_argument('g', type=int, help="green component of desired color (0-255)", required=True)
-        self.post_parser.add_argument('b', type=int, help="blue component of desired color (0-255)", required=True)
+        self.put_parser = self.get_parser.copy()
+        self.put_parser.add_argument('r', type=int, help="red component of desired color (0-255)", required=True)
+        self.put_parser.add_argument('g', type=int, help="green component of desired color (0-255)", required=True)
+        self.put_parser.add_argument('b', type=int, help="blue component of desired color (0-255)", required=True)
 
     def get(self, x, y):
         try:
@@ -46,13 +65,13 @@ class Pixel(Resource):
         sense.set_pixel(x, y, 0, 0, 0)
         return sense.get_pixel(x, y), 204
 
-    def post(self, x, y):
+    def put(self, x, y):
         try:
             x = int(x)
             y = int(y)
         except ValueeError:
             abort(422, message="x, y must be integers")
-        args = self.post_parser.parse_args(strict=True)
+        args = self.put_parser.parse_args(strict=True)
         self.check_coords(x=x, y=y)
         self.check_color(r=args['r'], g=args['g'], b=args['b'])
         sense.set_pixel(x, y, args['r'], args['g'], args['b'])
@@ -68,8 +87,19 @@ class Pixel(Resource):
         if r < 0 or r > 255 or g < 0 or g > 255 or b < 0 or g > 255:
             abort(404, message="r, g, b must be between 0 and 255")
 
+class Pixels(Resource):
+    def get(self):
+        pixels = sense.get_pixels()
+        return [
+            {"x": i // 8, "y": i % 8, "r": j[0], "g": j[1], "b": j[2]} for i, j in enumerate(pixels)
+        ]
+
 api.add_resource(Sense, '/sense')
+api.add_resource(Pixels, '/sense/pixel')
 api.add_resource(Pixel, '/sense/pixel/<x>/<y>')
+api.add_resource(Humidity, '/sense/humidity')
+api.add_resource(Pressure, '/sense/pressure')
+api.add_resource(Temperature, '/sense/temperature')
 
 if __name__ == '__main__':
     sense.clear()
