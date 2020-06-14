@@ -91,7 +91,7 @@ class Pixels(Resource):
     def get(self):
         pixels = sense.get_pixels()
         return [
-            {"x": i // 8, "y": i % 8, "r": j[0], "g": j[1], "b": j[2]} for i, j in enumerate(pixels)
+            {"x": i % 8, "y": i // 8, "r": j[0], "g": j[1], "b": j[2]} for i, j in enumerate(pixels)
         ]
 
 api.add_resource(Sense, '/sense')
